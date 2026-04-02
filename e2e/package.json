@@ -1,0 +1,16 @@
+{
+  "name": "e2e",
+  "version": "1.0.0",
+  "description": "Playwright e2e tests for calendar booking app",
+  "scripts": {
+    "test": "playwright test --config=playwright.config.ts",
+    "test:ci": "playwright test --config=playwright.config.ts --reporter=list"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.49.0",
+    "typescript": "^5.7.0"
+  }
+}
