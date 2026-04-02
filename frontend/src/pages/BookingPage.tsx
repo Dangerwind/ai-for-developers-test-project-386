@@ -14,7 +14,11 @@ export default function BookingPage() {
   const navigate = useNavigate()
 
   const [eventType, setEventType] = useState<EventType | null>(null)
-  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date())
+  const [selectedDate, setSelectedDate] = useState<Date | null>(() => {
+    const tomorrow = new Date()
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    return tomorrow
+  })
   const [slots, setSlots] = useState<Slot[]>([])
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null)
   const [guestName, setGuestName] = useState('')
