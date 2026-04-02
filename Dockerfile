@@ -7,7 +7,7 @@ COPY frontend/ ./
 RUN npm run build
 
 # Stage 2: Build backend (Java + Gradle)
-FROM eclipse-temurin:21-jdk-alpine AS backend-build
+FROM eclipse-temurin:21-jdk AS backend-build
 WORKDIR /app/backend
 COPY backend/gradlew backend/gradlew.bat ./
 COPY backend/gradle ./gradle
