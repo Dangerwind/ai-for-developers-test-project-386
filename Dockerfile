@@ -1,5 +1,5 @@
 # Stage 1: Build frontend
-FROM node:20-alpine AS frontend-build
+FROM node:24-alpine AS frontend-build
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm ci
@@ -7,16 +7,16 @@ COPY frontend/ ./
 RUN npm run build
 
 # Stage 2: Build backend (Java + Gradle)
-FROM gradle:8.7-jdk21 AS backend-build
+FROM eclipse-temurin:21-jdk-alpine AS backend-build
 WORKDIR /app/backend
 COPY backend/gradlew backend/gradlew.bat ./
 COPY backend/gradle ./gradle
 COPY backend/build.gradle.kts backend/settings.gradle.kts ./
-RUN gradle dependencies -q --no-daemon || true
+RUN chmod +x gradlew && ./gradlew dependencies -q --no-daemon || true
 COPY backend/src ./src
 # Copy built frontend into Spring Boot static resources
 COPY --from=frontend-build /app/frontend/dist ./src/main/resources/static
-RUN gradle bootJar -x test --no-daemon -q
+RUN ./gradlew bootJar -x test --no-daemon -q
 
 # Stage 3: Production image
 FROM eclipse-temurin:21-jre-alpine
