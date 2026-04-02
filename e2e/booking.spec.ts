@@ -18,8 +18,8 @@ test.describe('Booking flow', () => {
 
   test('Guest can see event types on home page', async ({ page }) => {
     await page.goto('/')
-    await expect(page.getByText('Выберите тип встречи')).toBeVisible()
-    await expect(page.getByText('Test Meeting')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Выберите тип встречи' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Test Meeting' }).first()).toBeVisible()
   })
 
   test('Guest can open booking page for an event type', async ({ page }) => {
@@ -53,18 +53,18 @@ test.describe('Booking flow', () => {
 
   test('Owner can see upcoming bookings in admin panel', async ({ page }) => {
     await page.goto('/admin')
-    await expect(page.getByText('Предстоящие встречи')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Предстоящие встречи' })).toBeVisible()
     // After booking in previous test, there should be at least 1 booking
     await expect(page.getByText('Иван Тестовый')).toBeVisible({ timeout: 10000 })
   })
 
   test('Owner can create a new event type', async ({ page }) => {
     await page.goto('/admin')
-    await page.getByText('Создать тип события').click()
+    await page.getByRole('tab', { name: 'Создать тип события' }).click()
     await page.getByLabel('Название').fill('Новый тип')
     await page.getByLabel('Описание').fill('Описание нового типа')
     await page.getByLabel('Длительность (мин)').fill('45')
-    await page.getByText('Создать').click()
+    await page.getByRole('button', { name: 'Создать' }).click()
     await expect(page.getByText('Тип события успешно создан!')).toBeVisible()
   })
 })
