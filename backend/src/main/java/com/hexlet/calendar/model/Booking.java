@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.UUID;
 
 @Entity
@@ -31,10 +32,16 @@ public class Booking {
     @Column(nullable = false)
     private OffsetDateTime endTime;
 
+    @Column(nullable = false, updatable = false)
+    private OffsetDateTime createdAt;
+
     @PrePersist
     public void generateId() {
         if (this.id == null) {
             this.id = UUID.randomUUID().toString();
+        }
+        if (this.createdAt == null) {
+            this.createdAt = OffsetDateTime.now(ZoneOffset.UTC);
         }
     }
 }

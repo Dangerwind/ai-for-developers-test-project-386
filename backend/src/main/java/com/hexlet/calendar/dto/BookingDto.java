@@ -13,4 +13,5 @@ public class BookingDto {
     private String guestEmail;
     private OffsetDateTime startTime;
     private OffsetDateTime endTime;
+    private OffsetDateTime createdAt;
 }

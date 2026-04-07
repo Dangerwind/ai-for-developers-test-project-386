@@ -25,6 +25,7 @@ export interface Booking {
   guestEmail: string
   startTime: string
   endTime: string
+  createdAt?: string
 }
 
 export interface CreateEventTypeRequest {

@@ -99,6 +99,7 @@ public class BookingService {
         dto.setGuestEmail(booking.getGuestEmail());
         dto.setStartTime(booking.getStartTime());
         dto.setEndTime(booking.getEndTime());
+        dto.setCreatedAt(booking.getCreatedAt());
         return dto;
     }
 }
