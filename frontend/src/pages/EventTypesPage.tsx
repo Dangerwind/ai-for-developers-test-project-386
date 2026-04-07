@@ -35,8 +35,14 @@ export default function EventTypesPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  const scrollToEvents = () => {
-    eventsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  const handleHeroCta = () => {
+    if (eventTypes.length === 1) {
+      // Only one type — go directly to booking
+      navigate(`/book/${eventTypes[0].id}`)
+    } else {
+      // Multiple types — scroll to the cards
+      eventsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
   }
 
   return (
@@ -45,8 +51,8 @@ export default function EventTypesPage() {
         <div className="hero-badge">Бесплатно</div>
         <h1>Calendar</h1>
         <p>Простой способ планировать встречи. Выберите тип события, удобное время — и готово.</p>
-        <button className="btn-primary" onClick={scrollToEvents}>
-          Записаться <ArrowIcon />
+        <button className="btn-primary" onClick={handleHeroCta} disabled={loading}>
+          {loading ? 'Загрузка...' : <>Записаться <ArrowIcon /></>}
         </button>
       </div>
 
