@@ -52,6 +52,18 @@ export default function App() {
             >
               Предстоящие события
             </NavLink>
+            <NavLink
+              to="/admin"
+              className={({ isActive }) =>
+                `text-sm font-medium pb-0.5 border-b-2 no-underline transition-colors ${
+                  isActive
+                    ? 'text-orange-500 border-orange-500'
+                    : 'text-gray-400 border-transparent hover:text-gray-700'
+                }`
+              }
+            >
+              Админ
+            </NavLink>
           </nav>
         </div>
       </header>

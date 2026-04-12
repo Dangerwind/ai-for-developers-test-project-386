@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getEventTypes } from '../api'
 import type { EventType } from '../api'
@@ -17,7 +17,6 @@ export default function EventTypesPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
-  const eventsRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     getEventTypes()
@@ -25,14 +24,6 @@ export default function EventTypesPage() {
       .catch(() => setError('Не удалось загрузить типы событий'))
       .finally(() => setLoading(false))
   }, [])
-
-  const handleHeroCta = () => {
-    if (eventTypes.length === 1) {
-      navigate(`/book/${eventTypes[0].id}`)
-    } else {
-      eventsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }
-  }
 
   return (
     <>
@@ -43,20 +34,13 @@ export default function EventTypesPage() {
           Бесплатно
         </span>
         <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 mb-3">Calendar</h1>
-        <p className="text-gray-500 text-base mb-6 max-w-md">
+        <p className="text-gray-500 text-base max-w-md">
           Простой способ планировать встречи. Выберите тип события, удобное время — и готово.
         </p>
-        <button
-          onClick={handleHeroCta}
-          disabled={loading}
-          className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors cursor-pointer"
-        >
-          {loading ? 'Загрузка...' : 'Записаться →'}
-        </button>
       </div>
 
       {/* Event types */}
-      <div ref={eventsRef}>
+      <div>
         <h2 className="text-lg font-bold text-gray-900 mb-4">Выберите тип встречи</h2>
 
         {loading ? (
