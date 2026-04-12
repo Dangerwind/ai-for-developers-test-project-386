@@ -4,6 +4,8 @@
 
 # Календарь звонков
 
+**Деплой:** https://hexlet-calendar.onrender.com
+
 Упрощённый сервис бронирования времени для встреч (по мотивам Cal.com).
 
 ## Функциональность
@@ -15,7 +17,7 @@
 
 ## Стек
 
-- **Frontend**: TypeScript + Vite + React + Mantine
+- **Frontend**: TypeScript + Vite + React + Tailwind CSS v4
 - **Backend**: Java 21 + Spring Boot 3 + Gradle + H2 (in-memory)
 - **API Spec**: TypeSpec → OpenAPI
 - **Tests**: Playwright (e2e)
