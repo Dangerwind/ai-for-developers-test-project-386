@@ -12,15 +12,6 @@ function ClockIcon() {
   )
 }
 
-function ArrowIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-      <line x1="5" y1="12" x2="19" y2="12" />
-      <polyline points="12 5 19 12 12 19" />
-    </svg>
-  )
-}
-
 export default function EventTypesPage() {
   const [eventTypes, setEventTypes] = useState<EventType[]>([])
   const [loading, setLoading] = useState(true)
@@ -37,52 +28,65 @@ export default function EventTypesPage() {
 
   const handleHeroCta = () => {
     if (eventTypes.length === 1) {
-      // Only one type — go directly to booking
       navigate(`/book/${eventTypes[0].id}`)
     } else {
-      // Multiple types — scroll to the cards
       eventsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
   }
 
   return (
     <>
-      <div className="hero">
-        <div className="hero-badge">Бесплатно</div>
-        <h1>Calendar</h1>
-        <p>Простой способ планировать встречи. Выберите тип события, удобное время — и готово.</p>
-        <button className="btn-primary" onClick={handleHeroCta} disabled={loading}>
-          {loading ? 'Загрузка...' : <>Записаться <ArrowIcon /></>}
+      {/* Hero */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200 rounded-2xl px-10 py-12 mb-10">
+        <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-orange-100 opacity-50 pointer-events-none" />
+        <span className="inline-flex items-center bg-white border border-orange-200 text-orange-500 text-xs font-semibold px-3 py-1 rounded-full mb-4">
+          Бесплатно
+        </span>
+        <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 mb-3">Calendar</h1>
+        <p className="text-gray-500 text-base mb-6 max-w-md">
+          Простой способ планировать встречи. Выберите тип события, удобное время — и готово.
+        </p>
+        <button
+          onClick={handleHeroCta}
+          disabled={loading}
+          className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors cursor-pointer"
+        >
+          {loading ? 'Загрузка...' : 'Записаться →'}
         </button>
       </div>
 
+      {/* Event types */}
       <div ref={eventsRef}>
-        <div className="section-header">
-          <h2 className="section-title">Выберите тип встречи</h2>
-        </div>
+        <h2 className="text-lg font-bold text-gray-900 mb-4">Выберите тип встречи</h2>
 
         {loading ? (
-          <div className="loader-center">
-            <div className="spinner" />
+          <div className="flex justify-center items-center h-32">
+            <div className="w-7 h-7 border-2 border-gray-200 border-t-orange-500 rounded-full animate-spin" />
           </div>
         ) : error ? (
-          <div className="error-banner">{error}</div>
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{error}</div>
         ) : eventTypes.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-state-icon">📅</div>
-            <p>Нет доступных типов встреч. Обратитесь к администратору.</p>
+          <div className="text-center py-12 text-gray-400">
+            <div className="text-4xl mb-3">📅</div>
+            <p className="text-sm">Нет доступных типов встреч. Обратитесь к администратору.</p>
           </div>
         ) : (
-          <div className="event-grid">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {eventTypes.map((et) => (
-              <div key={et.id} className="event-card">
-                <h4 className="event-card-title">{et.name}</h4>
-                <div className="event-card-desc">{et.description}</div>
-                <div className="event-card-meta">
+              <div
+                key={et.id}
+                className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md hover:border-orange-200 transition-all flex flex-col"
+              >
+                <h4 className="font-semibold text-gray-900 mb-1 text-base">{et.name}</h4>
+                <p className="text-sm text-gray-500 flex-1 mb-3 leading-snug">{et.description}</p>
+                <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-4">
                   <ClockIcon />
                   {et.durationMinutes} мин
                 </div>
-                <button className="btn-primary" onClick={() => navigate(`/book/${et.id}`)}>
+                <button
+                  onClick={() => navigate(`/book/${et.id}`)}
+                  className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold text-sm py-2 rounded-lg transition-colors cursor-pointer"
+                >
                   Забронировать
                 </button>
               </div>

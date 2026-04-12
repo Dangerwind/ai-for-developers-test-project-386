@@ -8,42 +8,7 @@ import type { EventType, Slot } from '../api'
 dayjs.locale('ru')
 
 const WEEK_DAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
-
-function ClockIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="12" cy="12" r="10" />
-      <polyline points="12 6 12 12 16 14" />
-    </svg>
-  )
-}
-
-function CalendarIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="3" y="4" width="18" height="18" rx="2" />
-      <line x1="3" y1="9" x2="21" y2="9" />
-      <line x1="8" y1="2" x2="8" y2="6" />
-      <line x1="16" y1="2" x2="16" y2="6" />
-    </svg>
-  )
-}
-
-function ChevronLeft() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-      <polyline points="15 18 9 12 15 6" />
-    </svg>
-  )
-}
-
-function ChevronRight() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-      <polyline points="9 18 15 12 9 6" />
-    </svg>
-  )
-}
+const BOOKING_WINDOW_DAYS = 14
 
 interface CalendarGridProps {
   eventTypeId: string
@@ -55,14 +20,16 @@ function CalendarGrid({ eventTypeId, selectedDate, onSelectDate }: CalendarGridP
   const [viewMonth, setViewMonth] = useState(() => dayjs(selectedDate).startOf('month'))
   const [slotCounts, setSlotCounts] = useState<Record<string, number>>({})
 
+  const today = dayjs()
+  const maxDate = today.add(BOOKING_WINDOW_DAYS - 1, 'day')
+
   useEffect(() => {
-    const today = dayjs()
     const daysInMonth = viewMonth.daysInMonth()
     const days: string[] = []
 
     for (let d = 1; d <= daysInMonth; d++) {
       const day = viewMonth.date(d)
-      if (!day.isBefore(today, 'day')) {
+      if (!day.isBefore(today, 'day') && !day.isAfter(maxDate, 'day')) {
         days.push(day.format('YYYY-MM-DD'))
       }
     }
@@ -77,16 +44,13 @@ function CalendarGrid({ eventTypeId, selectedDate, onSelectDate }: CalendarGridP
       )
     ).then((results) => {
       const counts: Record<string, number> = {}
-      results.forEach(({ dateStr, count }) => {
-        counts[dateStr] = count
-      })
+      results.forEach(({ dateStr, count }) => { counts[dateStr] = count })
       setSlotCounts(counts)
     })
   }, [eventTypeId, viewMonth])
 
   const firstDayOffset = (viewMonth.startOf('month').day() + 6) % 7
   const daysInMonth = viewMonth.daysInMonth()
-  const today = dayjs()
   const selectedStr = dayjs(selectedDate).format('YYYY-MM-DD')
 
   const cells: (number | null)[] = [
@@ -95,53 +59,68 @@ function CalendarGrid({ eventTypeId, selectedDate, onSelectDate }: CalendarGridP
   ]
 
   return (
-    <div className="calendar">
-      <div className="calendar-header">
+    <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+      {/* Month nav */}
+      <div className="flex items-center justify-between mb-4">
         <button
-          className="cal-nav"
           onClick={() => setViewMonth((m) => m.subtract(1, 'month'))}
+          className="w-8 h-8 flex items-center justify-center border border-gray-200 rounded-lg text-gray-400 hover:border-orange-400 hover:text-orange-500 transition-colors cursor-pointer"
         >
-          <ChevronLeft />
+          ‹
         </button>
-        <span className="cal-title">{viewMonth.format('MMMM YYYY')}</span>
+        <span className="text-sm font-semibold text-gray-800 capitalize">
+          {viewMonth.format('MMMM YYYY')}
+        </span>
         <button
-          className="cal-nav"
           onClick={() => setViewMonth((m) => m.add(1, 'month'))}
+          className="w-8 h-8 flex items-center justify-center border border-gray-200 rounded-lg text-gray-400 hover:border-orange-400 hover:text-orange-500 transition-colors cursor-pointer"
         >
-          <ChevronRight />
+          ›
         </button>
       </div>
 
-      <div className="calendar-grid">
+      {/* Grid */}
+      <div className="grid grid-cols-7 gap-0.5">
         {WEEK_DAYS.map((d) => (
-          <div key={d} className="cal-weekday">{d}</div>
+          <div key={d} className="text-center text-xs font-semibold text-gray-400 uppercase tracking-wide py-1">
+            {d}
+          </div>
         ))}
 
         {cells.map((day, i) => {
-          if (!day) return <div key={`empty-${i}`} />
+          if (!day) return <div key={`e-${i}`} />
 
           const date = viewMonth.date(day)
           const dateStr = date.format('YYYY-MM-DD')
           const isPast = date.isBefore(today, 'day')
+          const isTooFar = date.isAfter(maxDate, 'day')
+          const isDisabled = isPast || isTooFar
           const isSelected = dateStr === selectedStr
           const isToday = date.isSame(today, 'day')
           const count = slotCounts[dateStr]
 
-          let className = 'cal-day'
-          if (isPast) className += ' past'
-          if (isSelected) className += ' selected'
-          if (isToday && !isSelected) className += ' today'
-
           return (
             <button
               key={day}
-              className={className}
-              disabled={isPast}
-              onClick={() => !isPast && onSelectDate(date.toDate())}
+              disabled={isDisabled}
+              onClick={() => onSelectDate(date.toDate())}
+              data-testid={`cal-day-${dateStr}`}
+              className={[
+                'flex flex-col items-center justify-center min-h-11 rounded-lg text-sm transition-colors cursor-pointer border-0',
+                isSelected
+                  ? 'bg-orange-500 text-white'
+                  : isDisabled
+                  ? 'text-gray-300 cursor-not-allowed'
+                  : isToday
+                  ? 'font-bold text-orange-500 hover:bg-orange-50'
+                  : 'text-gray-700 hover:bg-orange-50 hover:text-orange-500',
+              ].join(' ')}
             >
               <span>{day}</span>
-              {!isPast && count !== undefined && count > 0 && (
-                <span className="cal-count">{count}</span>
+              {!isDisabled && count !== undefined && count > 0 && (
+                <span className={`text-[10px] font-semibold px-1 rounded-full leading-4 ${isSelected ? 'bg-white/25 text-white' : 'bg-orange-100 text-orange-500'}`}>
+                  {count}
+                </span>
               )}
             </button>
           )
@@ -222,91 +201,83 @@ export default function BookingPage() {
 
   if (loading) {
     return (
-      <div className="loader-center">
-        <div className="spinner" />
+      <div className="flex justify-center items-center h-40">
+        <div className="w-7 h-7 border-2 border-gray-200 border-t-orange-500 rounded-full animate-spin" />
       </div>
     )
   }
 
   if (!eventType) {
-    return <div className="error-banner">{error || 'Тип события не найден'}</div>
+    return <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{error || 'Тип события не найден'}</div>
   }
 
   const availableSlots = slots.filter((s) => s.available)
   const initials = eventType.name.slice(0, 2).toUpperCase()
 
   return (
-    <div className="booking-layout">
+    <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-6 items-start">
       {/* Sidebar */}
-      <aside className="booking-sidebar">
-        <div className="booking-sidebar-avatar">{initials}</div>
-        <div className="booking-sidebar-name">Встреча с организатором</div>
-        <div className="booking-sidebar-title">{eventType.name}</div>
+      <aside className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm md:sticky md:top-24">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold text-sm mb-3">
+          {initials}
+        </div>
+        <p className="text-xs text-gray-400 mb-0.5">Встреча с организатором</p>
+        <h2 className="font-bold text-gray-900 text-base mb-3">{eventType.name}</h2>
 
-        <div className="sidebar-info-row">
-          <ClockIcon />
+        <div className="flex items-center gap-1.5 text-sm text-gray-500 mb-2">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+          </svg>
           {eventType.durationMinutes} минут
         </div>
 
         {eventType.description && (
-          <div className="sidebar-info-row" style={{ alignItems: 'flex-start', lineHeight: 1.4 }}>
-            <span style={{ marginTop: '2px', color: 'var(--orange)' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="8" x2="12" y2="12" />
-                <line x1="12" y1="16" x2="12.01" y2="16" />
-              </svg>
-            </span>
-            <span>{eventType.description}</span>
-          </div>
+          <p className="text-sm text-gray-500 leading-snug">{eventType.description}</p>
         )}
 
         {selectedSlot && (
-          <div className="sidebar-selected-slot">
-            <div style={{ fontSize: '0.75rem', fontWeight: 600, marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-              Выбранное время
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-              <CalendarIcon />
-              {dayjs(selectedSlot.startTime).format('D MMMM, HH:mm')} –{' '}
-              {dayjs(selectedSlot.endTime).format('HH:mm')}
-            </div>
+          <div className="mt-4 bg-indigo-50 border border-indigo-200 rounded-lg px-3 py-2.5">
+            <p className="text-[10px] font-semibold text-indigo-600 uppercase tracking-wide mb-1">Выбранное время</p>
+            <p className="text-sm text-indigo-800 font-medium">
+              {dayjs(selectedSlot.startTime).format('D MMMM, HH:mm')} – {dayjs(selectedSlot.endTime).format('HH:mm')}
+            </p>
           </div>
         )}
       </aside>
 
-      {/* Main content */}
-      <div className="booking-main">
-        {/* Calendar */}
+      {/* Main */}
+      <div className="flex flex-col gap-4">
         <CalendarGrid
           eventTypeId={eventTypeId!}
           selectedDate={selectedDate}
           onSelectDate={setSelectedDate}
         />
 
-        {/* Slot list */}
-        <div className="slots-section">
-          <div className="slots-section-title">Доступные слоты</div>
+        {/* Slots */}
+        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+          <p className="font-semibold text-gray-900 text-sm mb-3">Доступные слоты</p>
 
           {slotsLoading ? (
-            <div className="loader-center" style={{ minHeight: 80 }}>
-              <div className="spinner spinner-sm" />
+            <div className="flex justify-center items-center h-14">
+              <div className="w-5 h-5 border-2 border-gray-200 border-t-orange-500 rounded-full animate-spin" />
             </div>
           ) : availableSlots.length === 0 ? (
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9375rem', margin: 0 }}>
-              Нет свободных слотов на выбранную дату
-            </p>
+            <p className="text-sm text-gray-400">Нет свободных слотов на выбранную дату</p>
           ) : (
-            <div className="slots-grid">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(80px,1fr))] gap-2">
               {availableSlots.map((slot) => {
                 const time = dayjs(slot.startTime).format('HH:mm')
                 const isSelected = selectedSlot?.startTime === slot.startTime
                 return (
                   <button
                     key={slot.startTime}
-                    className={`slot-btn${isSelected ? ' selected' : ''}`}
-                    onClick={() => setSelectedSlot(slot)}
                     data-testid={`slot-${time}`}
+                    onClick={() => setSelectedSlot(slot)}
+                    className={`py-2 rounded-lg border text-sm font-medium transition-colors cursor-pointer ${
+                      isSelected
+                        ? 'bg-orange-500 border-orange-500 text-white'
+                        : 'bg-white border-gray-200 text-gray-700 hover:border-orange-400 hover:text-orange-500'
+                    }`}
                   >
                     {time}
                   </button>
@@ -316,59 +287,60 @@ export default function BookingPage() {
           )}
         </div>
 
-        {/* Booking form (shown after slot selection) */}
+        {/* Form */}
         {selectedSlot && (
-          <div className="booking-form">
-            <div className="form-title">Ваши данные</div>
+          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+            <p className="font-semibold text-gray-900 text-sm mb-4">Ваши данные</p>
 
-            <div className="form-group">
-              <label className="form-label" htmlFor="guestName">
-                Ваше имя <span>*</span>
+            <div className="mb-3">
+              <label htmlFor="guestName" className="block text-sm font-medium text-gray-700 mb-1">
+                Ваше имя <span className="text-red-400">*</span>
               </label>
               <input
                 id="guestName"
-                className="form-input"
                 type="text"
                 placeholder="Иван Иванов"
                 value={guestName}
                 onChange={(e) => setGuestName(e.target.value)}
                 aria-label="Ваше имя"
+                className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
               />
             </div>
 
-            <div className="form-group">
-              <label className="form-label" htmlFor="guestEmail">
-                Email <span>*</span>
+            <div className="mb-4">
+              <label htmlFor="guestEmail" className="block text-sm font-medium text-gray-700 mb-1">
+                Email <span className="text-red-400">*</span>
               </label>
               <input
                 id="guestEmail"
-                className="form-input"
                 type="email"
                 placeholder="ivan@example.com"
                 value={guestEmail}
                 onChange={(e) => setGuestEmail(e.target.value)}
                 aria-label="Email"
+                className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
               />
             </div>
 
-            {error && <div className="error-banner">{error}</div>}
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm mb-3">{error}</div>
+            )}
 
-            <div className="form-actions">
+            <div className="flex items-center gap-3">
               <button
-                className="btn-primary"
                 onClick={handleBook}
                 disabled={submitting}
+                className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors cursor-pointer"
               >
-                {submitting ? (
-                  <>
-                    <div className="spinner spinner-sm" style={{ borderTopColor: 'white', borderColor: 'rgba(255,255,255,0.3)' }} />
-                    Отправка...
-                  </>
-                ) : (
-                  'Подтвердить бронирование'
+                {submitting && (
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 )}
+                Подтвердить бронирование
               </button>
-              <button className="btn-ghost" onClick={() => navigate('/')}>
+              <button
+                onClick={() => navigate('/')}
+                className="text-sm text-gray-400 hover:text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+              >
                 Отмена
               </button>
             </div>
